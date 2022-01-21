@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "noImplicitAny": true,
+    "module": "es6",
+    "target": "es5",
+    "jsx": "react",
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
+    "moduleResolution": "node",
+    "lib": ["es5", "dom", "dom.iterable", "esnext"]
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}
