@@ -18,6 +18,8 @@ import brick from '/assets/brick.png';
 import block from '/assets/block.png';
 import coin from '/assets/coin.png';
 
+import lose from './scenes/lose';
+
 kaboom({
   background: [158, 225, 255],
   font: 'sinko',
@@ -42,11 +44,15 @@ loadSprite('brick', brick);
 loadSprite('block', block);
 loadSprite('coin', coin);
 
+lose();
+
 layer('obj');
 layer('ui');
 layers(['obj', 'ui'], 'obj');
 
-const SCORE = 0;
+// const SCORE = 0;
+const ENEMY_SPEED = 30;
+const FALL_DEATH = 600;
 const MOVE_SPEED = 120;
 const JUMP_FORCE = 500;
 
@@ -70,7 +76,7 @@ const levelCfg = {
   height: 20,
   '=': () => [sprite('block'), area(), solid()],
   x: () => [sprite('brick'), area(), solid()],
-  $: () => [sprite('coin'), 'coin'],
+  $: () => [sprite('coin'), area(), 'coin'],
   '%': () => [sprite('question'), area(), solid(), 'coin-surprise'],
   '*': () => [sprite('question'), area(), solid(), 'mushroom-surprise'],
   '}': () => [sprite('unboxed'), area(), solid()],
@@ -145,7 +151,7 @@ keyDown('space', () => {
   }
 });
 
-onCollide('fario', 'coin-surprise', (fari, box, colision) => {
+onCollide('fario', 'coin-surprise', (_, box, colision) => {
   if (colision.isTop() && colision.target.is('coin-surprise')) {
     gameLevel.spawn('$', box.gridPos.sub(0, 1));
     destroy(box);
@@ -153,7 +159,7 @@ onCollide('fario', 'coin-surprise', (fari, box, colision) => {
   }
 });
 
-onCollide('fario', 'mushroom-surprise', (fari, box, colision) => {
+onCollide('fario', 'mushroom-surprise', (_, box, colision) => {
   if (colision.isTop() && colision.target.is('mushroom-surprise')) {
     gameLevel.spawn('#', box.gridPos.sub(0, 1));
     destroy(box);
@@ -161,11 +167,42 @@ onCollide('fario', 'mushroom-surprise', (fari, box, colision) => {
   }
 });
 
-onCollide('fario', 'mushroom', (fari, box, colision) => {
+onCollide('fario', 'mushroom', (fari, box) => {
   fari.biggify(6);
   destroy(box);
 });
 
+onCollide('fario', 'coin', (_, box) => {
+  sumScore();
+  destroy(box);
+});
+
+function sumScore() {
+  const newValue = parseInt(scoreLabel.value, 10) + 1;
+  scoreLabel.value = newValue.toString();
+  scoreLabel.text = newValue.toString();
+}
+
 action('mushroom', (obj) => {
   obj.move(20, 0);
+});
+
+action('dangerous', (d) => {
+  d.move(-ENEMY_SPEED, 0);
+});
+
+onCollide('fario', 'dangerous', (_, box, colision) => {
+  if (colision.isBottom() && colision.target.is('dangerous')) {
+    sumScore();
+    destroy(box);
+  } else if (colision.target.is('dangerous') && !colision.isBottom()) {
+    go('lose', scoreLabel.value);
+  }
+});
+
+player.onUpdate(() => {
+  camPos(player.pos);
+  if (player.pos.y >= FALL_DEATH) {
+    go('lose', scoreLabel.value);
+  }
 });
