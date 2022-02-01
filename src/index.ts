@@ -20,11 +20,13 @@ import coin from '/assets/coin.png';
 
 import lose from './scenes/lose';
 
-kaboom({
+const game = kaboom({
   background: [158, 225, 255],
   font: 'sinko',
   scale: 1.3,
 });
+
+console.log({ game: game.arg });
 
 loadSprite('pipe-top-right-side', pipeTopRightSide);
 loadSprite('pipe-top-left-side', pipeTopLeftSide);
@@ -50,25 +52,35 @@ layer('obj');
 layer('ui');
 layers(['obj', 'ui'], 'obj');
 
-// const SCORE = 0;
+const LEVEL_INDEX = 0;
 const ENEMY_SPEED = 30;
 const FALL_DEATH = 600;
 const MOVE_SPEED = 120;
 const JUMP_FORCE = 500;
 
-const map = [
-  '                                      ',
-  '                                      ',
-  '                                      ',
-  '                                      ',
-  '                                      ',
-  '                                      ',
-  '                                      ',
-  '       %  =*=%                        ',
-  '                                      ',
-  '                              -+      ',
-  '                  ^  ^        ()      ',
-  'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx    xx',
+const maps = [
+  [
+    '                                    ',
+    '                                    ',
+    '                                    ',
+    '                                    ',
+    '                                    ',
+    '    %   =*=%=                       ',
+    '                                    ',
+    '                            -+      ',
+    '             ^   ^          ()      ',
+    'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx    xx',
+  ],
+  [
+    '£                                  £',
+    '£                                  £',
+    '£                                  £',
+    '£        @@@@@      s              £',
+    '£                 s s s            £',
+    '£               s s s s s        -+£',
+    '£      !      s s s s s s        ()£',
+    'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz',
+  ],
 ];
 
 const levelCfg = {
@@ -89,11 +101,11 @@ const levelCfg = {
   '£': () => [sprite('blue-brick'), area(), solid(), scale(0.5)],
   z: () => [sprite('blue-block'), area(), solid(), scale(0.5)],
   '@': () => [sprite('blue-surprise'), area(), solid(), scale(0.5), 'coin-surprise'],
-  '!': () => [sprite('blue-evil-shroom'), 'dangerous', scale(0.5)],
+  '!': () => [sprite('blue-evil-shroom'), solid(), area(), scale(0.5), 'dangerous'],
   s: () => [sprite('blue-steel'), area(), solid(), scale(0.5)],
 };
 
-const gameLevel = addLevel(map, levelCfg);
+const gameLevel = addLevel(maps[LEVEL_INDEX], levelCfg);
 
 add([text('level 0'), pos(60, 6)]);
 
@@ -197,6 +209,18 @@ onCollide('fario', 'dangerous', (_, box, colision) => {
     destroy(box);
   } else if (colision.target.is('dangerous') && !colision.isBottom()) {
     go('lose', scoreLabel.value);
+  }
+});
+
+onCollide('fario', 'pipe', (_, box, colision) => {
+  if (colision.isBottom() && colision.target.is('pipe')) {
+    keyPress(['down', 's'], () => {
+      console.log('next s');
+      go('game', {
+        level: (LEVEL_INDEX + 1) % maps.length,
+        score: scoreLabel.value,
+      });
+    });
   }
 });
 
